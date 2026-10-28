@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lab sign in</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header><nav><span class="brand" id="brand">Lab</span></nav></header>
+  <main>
+    <h1>Sign in to the lab</h1>
+    <div class="card">
+      <h2>Sign in</h2>
+      <form id="login">
+        <label for="li-email">Email</label>
+        <input id="li-email" type="email" autocomplete="email" required>
+        <label for="li-pass">Password</label>
+        <input id="li-pass" type="password" autocomplete="current-password" required>
+        <button type="submit">Sign in</button>
+        <p class="msg" id="login-msg"></p>
+      </form>
+    </div>
+    <div class="card">
+      <h2>First time here? Create an account</h2>
+      <form id="signup">
+        <div class="grid">
+          <div><label for="su-name">Full name</label><input id="su-name" required></div>
+          <div><label for="su-sid">Student ID</label><input id="su-sid" required></div>
+        </div>
+        <label for="su-email">Email</label>
+        <input id="su-email" type="email" autocomplete="email" required>
+        <label for="su-pass">Password (at least 8 characters)</label>
+        <input id="su-pass" type="password" minlength="8" autocomplete="new-password" required>
+        <label><input id="su-ok" type="checkbox" required style="width:auto"> I will use the lab software only for coursework and follow the lab rules.</label>
+        <button type="submit">Create account</button>
+        <p class="msg" id="signup-msg"></p>
+      </form>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="assets/app.js"></script>
+  <script>
+    document.getElementById("brand").textContent = CFG.LAB_NAME;
+    sb.auth.getSession().then(({ data }) => { if (data.session) location.href = "booking.html"; });
+
+    document.getElementById("login").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const { error } = await sb.auth.signInWithPassword({
+        email: document.getElementById("li-email").value.trim(),
+        password: document.getElementById("li-pass").value,
+      });
+      if (error) say("login-msg", error.message, false);
+      else location.href = "booking.html";
+    });
+
+    document.getElementById("signup").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const { error } = await sb.auth.signUp({
+        email: document.getElementById("su-email").value.trim(),
+        password: document.getElementById("su-pass").value,
+        options: { data: {
+          full_name: document.getElementById("su-name").value.trim(),
+          student_id: document.getElementById("su-sid").value.trim(),
+        } },
+      });
+      if (error) say("signup-msg", error.message, false);
+      else say("signup-msg", "Account created. Check your email to confirm it, then sign in above.", true);
+    });
+  </script>
+</body>
+</html>

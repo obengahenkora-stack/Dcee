@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Book a slot</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header id="nav"></header>
+  <main>
+    <h1>Book a lab software slot</h1>
+    <div class="card">
+      <form id="book">
+        <label for="sw">Software</label>
+        <select id="sw" required></select>
+        <div class="grid">
+          <div><label for="start">Start</label><input id="start" type="datetime-local" required></div>
+          <div><label for="end">End</label><input id="end" type="datetime-local" required></div>
+        </div>
+        <button type="submit">Book slot</button>
+        <p class="msg" id="book-msg"></p>
+      </form>
+    </div>
+    <div class="card">
+      <h2>My bookings</h2>
+      <div id="mine"></div>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="assets/app.js"></script>
+  <script>
+    let me;
+    (async () => {
+      me = await requireUser(false);
+      if (!me) return;
+      const { data: software } = await sb.from("software").select("id,name,version,seats").eq("active", true).order("name");
+      const sel = document.getElementById("sw");
+      (software || []).forEach((s) =>
+        sel.append(h("option", { value: s.id }, s.name + (s.version ? " " + s.version : "") + " (" + s.seats + " seats)")));
+      if (!software || !software.length) say("book-msg", "No software is open for booking yet.", false);
+      loadMine();
+    })();
+
+    document.getElementById("book").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const starts = new Date(document.getElementById("start").value);
+      const ends = new Date(document.getElementById("end").value);
+      if (!(ends > starts)) return say("book-msg", "The end time must be after the start time.", false);
+      if (starts < new Date()) return say("book-msg", "The start time is in the past.", false);
+      const { error } = await sb.from("bookings").insert({
+        software_id: Number(document.getElementById("sw").value),
+        starts_at: starts.toISOString(),
+        ends_at: ends.toISOString(),
+      });
+      if (error) say("book-msg", error.message, false);
+      else { say("book-msg", "Slot booked.", true); loadMine(); }
+    });
+
+    async function loadMine() {
+      const { data, error } = await sb.from("bookings")
+        .select("id,starts_at,ends_at,status,software(name,version)")
+        .eq("user_id", me.id).order("starts_at", { ascending: false }).limit(50);
+      const box = document.getElementById("mine");
+      if (error) return box.replaceChildren(h("p", { class: "msg bad" }, error.message));
+      if (!data.length) return box.replaceChildren(h("p", { class: "muted" }, "No bookings yet."));
+      box.replaceChildren(table(["Software", "Start", "End", "Status", ""],
+        data.map((b) => [
+          b.software ? b.software.name + (b.software.version ? " " + b.software.version : "") : "",
+          fmt(b.starts_at), fmt(b.ends_at), b.status,
+          b.status === "booked" && new Date(b.starts_at) > new Date()
+            ? h("button", { class: "ghost", onclick: async () => {
+                await sb.from("bookings").update({ status: "cancelled" }).eq("id", b.id);
+                loadMine();
+              } }, "Cancel")
+            : "",
+        ])));
+    }
+  </script>
+</body>
+</html>

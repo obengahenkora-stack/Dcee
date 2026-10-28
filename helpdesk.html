@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Report a fault</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header id="nav"></header>
+  <main>
+    <h1>Report a fault</h1>
+    <div class="card">
+      <form id="fault">
+        <label for="sw">Which software is affected? (optional)</label>
+        <select id="sw"><option value="">Not about one software</option></select>
+        <label for="desc">What went wrong?</label>
+        <textarea id="desc" rows="4" required placeholder="What you were doing, what you saw, and which computer or room."></textarea>
+        <button type="submit">Send report</button>
+        <p class="msg" id="fault-msg"></p>
+      </form>
+    </div>
+    <div class="card">
+      <h2>My reports</h2>
+      <div id="mine"></div>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="assets/app.js"></script>
+  <script>
+    let me;
+    (async () => {
+      me = await requireUser(false);
+      if (!me) return;
+      const { data } = await sb.from("software").select("id,name").eq("active", true).order("name");
+      (data || []).forEach((s) => document.getElementById("sw").append(h("option", { value: s.id }, s.name)));
+      loadMine();
+    })();
+
+    document.getElementById("fault").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const sw = document.getElementById("sw").value;
+      const { error } = await sb.from("tickets").insert({
+        software_id: sw ? Number(sw) : null,
+        description: document.getElementById("desc").value.trim(),
+      });
+      if (error) say("fault-msg", error.message, false);
+      else {
+        say("fault-msg", "Report sent. The lab admin will update its status here.", true);
+        document.getElementById("desc").value = "";
+        loadMine();
+      }
+    });
+
+    async function loadMine() {
+      const { data, error } = await sb.from("tickets")
+        .select("id,description,status,created_at,software(name)")
+        .eq("reporter_id", me.id).order("created_at", { ascending: false }).limit(50);
+      const box = document.getElementById("mine");
+      if (error) return box.replaceChildren(h("p", { class: "msg bad" }, error.message));
+      if (!data.length) return box.replaceChildren(h("p", { class: "muted" }, "No reports yet."));
+      box.replaceChildren(table(["Sent", "Software", "Problem", "Status"],
+        data.map((t) => [fmt(t.created_at), t.software ? t.software.name : "", t.description,
+          h("span", { class: "pill " + t.status }, t.status.replace("_", " "))])));
+    }
+  </script>
+</body>
+</html>
