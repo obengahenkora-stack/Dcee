@@ -4,12 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Report a fault</title>
-  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="two">
   <header id="nav"></header>
   <main>
     <h1>Report a fault</h1>
+    <p class="lede">Tell the lab admin what went wrong. You can follow the status here.</p>
     <div class="card">
       <form id="fault">
         <label for="sw">Which software is affected? (optional)</label>
@@ -27,7 +28,7 @@
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
-  <script src="assets/app.js"></script>
+  <script src="app.js"></script>
   <script>
     let me;
     (async () => {

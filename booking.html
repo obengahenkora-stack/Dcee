@@ -4,12 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Book a slot</title>
-  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="two">
   <header id="nav"></header>
   <main>
     <h1>Book a lab software slot</h1>
+    <p class="lede">Pick the software and a time. Seats never exceed the licence.</p>
     <div class="card">
       <form id="book">
         <label for="sw">Software</label>
@@ -29,7 +30,7 @@
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
-  <script src="assets/app.js"></script>
+  <script src="app.js"></script>
   <script>
     let me;
     (async () => {

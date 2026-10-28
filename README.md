@@ -11,8 +11,8 @@ the lab software run on the lab server (GitHub cannot host those).
 | `index.html` | Sign in and create account |
 | `booking.html` | Book a software slot (seats never exceed the licence) |
 | `helpdesk.html` | Report a fault and follow its status |
-| `admin.html`, `assets/admin.js` | Software, assets, faults, usage, users, backups |
-| `assets/app.js`, `assets/style.css` | Shared code and styles |
+| `admin.html`, `admin.js` | Software, assets, faults, usage, users, backups |
+| `app.js`, `style.css` | Shared code and styles |
 | `config.js` | Your Supabase address, key and Guacamole link |
 | `schema.sql` | Database tables, security rules and the seat-limit check |
 
